@@ -31,6 +31,10 @@ export default class Game extends Phaser.Scene {
         this.load.spritesheet('coinSpritesheet','../static/animation/coin.png', {frameWidth:64, frameHeight: 64, endFrame: 64});
         this.load.spritesheet('seagullSpritesheet','../static/animation/seagull.png', {frameWidth:120, frameHeight: 240});
         this.load.spritesheet('fuelSpritesheet','../static/animation/fuel.png', {frameWidth:101, frameHeight: 117});
+        this.load.audio('birdSound','../static/bird.wav');
+        this.load.audio('fuelSound','../static/fuel.wav');
+        this.load.audio('coinSound','../static/coin.wav');
+        this.load.audio('planeSound','../static/plane.wav');
     }
 
     setup(){
@@ -53,6 +57,12 @@ export default class Game extends Phaser.Scene {
         this.score = 0;
         this.lives = 4;
         this.fuelAmount = 5000;
+        this.birdSound=this.sound.add('birdSound');
+        this.fuelSound=this.sound.add('fuelSound');
+        this.coinSound=this.sound.add('coinSound');
+        this.planeSound=this.sound.add('planeSound');
+        this.planeSound.play();
+
 
         this.bgs = this.add.group();
         // console.log(window.innerWidth, window.innerHeight);
@@ -97,6 +107,7 @@ export default class Game extends Phaser.Scene {
             B.destroy();
             this.score++;
             this.scoreText.setText(`score: ${this.score}`);
+            this.coinSound.play();
         });
 
       this.physics.add.overlap(this.physicsPlane, this.fuels, (A,B) =>{
@@ -104,13 +115,15 @@ export default class Game extends Phaser.Scene {
             B.destroy();
             this.fuelAmount+=1000;
             this.fuelText.setText(`fuel: ${this.fuelAmount}`);
+            this.fuelSound.play();
         });
 
         this.physics.add.overlap(this.physicsPlane, this.seagulls, (A,B) =>{
             this.seagulls.remove(B);
-            B.destroy()
-            this.lives--
+            B.destroy();
+            this.lives--;
             this.livesText.setText(`lives: ${this.lives}`);
+            this.birdSound.play();
         });
 
 
