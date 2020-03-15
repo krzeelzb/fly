@@ -6,36 +6,11 @@ const HIGH_PLANE_BARRIER = 10;
 const LOW_PLANE_BARRIER = 700;
 export default class Game extends Phaser.Scene {
 
-    preload (){
-        //load plane image
-        this.load.image('plane', '../static/plane-rayanair.png');
-        //load coin image
-        this.load.image('coin', '../static/coinPlaceholder.png');
-        //load cloud images
-        for (let i=1;i<=9;i++){
-            this.load.image('cloud'+i, '../static/clouds/cloud'+i+'.png');
 
-        }
-
-        //animation
-
-
-        // if(Math.random()>=0.5){
-        // if(Math.random()>=0.5)
-        //     this.load.image('bg', '../static/france.png');
-        // }else{
-        this.load.image('bg', '../static/italy.png');
-        // }
-
-
-        this.load.spritesheet('coinSpritesheet','../static/animation/coin.png', {frameWidth:64, frameHeight: 64, endFrame: 64});
-        this.load.spritesheet('seagullSpritesheet','../static/animation/seagull.png', {frameWidth:120, frameHeight: 240});
-        this.load.spritesheet('fuelSpritesheet','../static/animation/fuel.png', {frameWidth:101, frameHeight: 117});
-        this.load.audio('birdSound','../static/bird.wav');
-        this.load.audio('fuelSound','../static/fuel.wav');
-        this.load.audio('coinSound','../static/coin.wav');
-        this.load.audio('planeSound','../static/plane.wav');
+    constructor() {
+        super("Game");
     }
+
 
     setup(){
         this.CLOUD_SPAWN_TIME = 900
@@ -120,10 +95,9 @@ export default class Game extends Phaser.Scene {
 
         this.physics.add.overlap(this.physicsPlane, this.seagulls, (A,B) =>{
             this.seagulls.remove(B);
-            B.destroy();
-            this.lives--;
-            this.livesText.setText(`lives: ${this.lives}`);
             this.birdSound.play();
+            B.destroy()
+            this.lives--
         });
 
 
@@ -139,8 +113,9 @@ export default class Game extends Phaser.Scene {
 
         this.scoreText = this.scene.scene.add.text(16, 16, `score: ${this.score}`, { fontSize: '32px', fill: '#000' });
         this.fuelText = this.scene.scene.add.text(16, 50, `fuel: ${this.fuelAmount}`, { fontSize: '32px', fill: '#000' });
-        this.livesText = this.scene.scene.add.text(16, 84, `lives: ${this.lives}`, { fontSize: '32px', fill: '#000' });
 
+        this.liveImg = this.physics.add.image(60, 120, 'plane4');
+        this.liveImg.setScale(0.15)
 
         //Plane overlaps clouds
         this.physics.add.overlap(this.physicsPlane, this.clouds, (el) => {
@@ -150,8 +125,6 @@ export default class Game extends Phaser.Scene {
                 this.planeOverlaps = false
             }, 50)
         });
-
-
 
 
         //animation
@@ -197,7 +170,7 @@ export default class Game extends Phaser.Scene {
         this.respawnFuel();
         this.fuelAmount--;
         this.fuelText.setText(`fuel: ${this.fuelAmount}`);
-
+        this.liveImg.setTexture(`plane${this.lives}`);
 
         if (this.input.activePointer.isDown) {
             let rad = Math.atan2(Math.min(LOW_PLANE_BARRIER,this.input.activePointer.y) - this.physicsPlane.y, Math.max(this.physicsPlane.x,Math.abs(this.input.activePointer.x - this.physicsPlane.x)));
@@ -344,9 +317,10 @@ export default class Game extends Phaser.Scene {
     }
 
     restart(){
+        this.scene.start("Start", {score: this.score});
         this.score = 0;
         this.lives = 4;
-        this.scene.restart();
+        this.planeSound.stop();
     }
 
     removeSeagullsWhenOffScreen(){
