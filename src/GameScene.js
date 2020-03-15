@@ -27,20 +27,23 @@ export default class Game extends Phaser.Scene {
         this.load.image('bg', '../static/italy.png');
         // }
 
+
         this.load.spritesheet('coinSpritesheet','../static/animation/coin.png', {frameWidth:64, frameHeight: 64, endFrame: 64});
+        this.load.spritesheet('fuelSpritesheet','../static/animation/fuel.png', {frameWidth:101, frameHeight: 117});
 
 
     }
 
     setup(){
-        this.CLOUD_SPAWN_TIME = 900
-        this.COIN_SPAWN_TIME = 5000
-        this.BASE_CLOUD_SPEED = 200
+        this.CLOUD_SPAWN_TIME = 900;
+        this.COIN_SPAWN_TIME = 5000;
+        this.FUEL_SPAWN_TIME = 8000;
+        this.BASE_CLOUD_SPEED = 200;
 
         this.interval = setInterval(()=>{
-            this.CLOUD_SPAWN_TIME= Math.max(this.CLOUD_SPAWN_TIME-1,200)
+            this.CLOUD_SPAWN_TIME= Math.max(this.CLOUD_SPAWN_TIME-1,200);
             this.BASE_CLOUD_SPEED+=1
-        },100)
+        },100);
 
         this.COLISION_SPEED = 120
     }
@@ -48,6 +51,7 @@ export default class Game extends Phaser.Scene {
 
     create (){
         this.score = 0;
+        this.fuelAmount =5000;
         console.log(this);
         this.bgs = this.add.group();
         // console.log(window.innerWidth, window.innerHeight);
@@ -74,11 +78,13 @@ export default class Game extends Phaser.Scene {
         //setup variables useful for clouds and coins
         this.lastTimeSpawnedCloud = 0;
         this.lastTimeSpawnedCoin = 0;
+        this.lastTimeSpawnedFuel = 0;
         this.clouds = this.add.group();
         this.clouds.setDepth(3);
         this.coins = this.add.group();
         this.coins.setDepth(2);
-
+        this.fuels=this.add.group();
+        this.fuels.setDepth(2);
         //coin overlapping
 
         this.physics.add.overlap(this.physicsPlane, this.coins, (A,B) =>{
@@ -88,6 +94,14 @@ export default class Game extends Phaser.Scene {
             // window.vm.$store.commit('addCoinInGame')
             this.scoreText.setText(`score: ${this.score}`);
             console.log(this.score);
+        });
+      this.physics.add.overlap(this.physicsPlane, this.fuels, (A,B) =>{
+            this.fuels.remove(B);
+            B.destroy();
+            this.fuelAmount+=1000;
+            // window.vm.$store.commit('addCoinInGame')
+            this.fuelText.setText(`fuel: ${this.fuelAmount}`);
+            // console.log(this.score);
         });
 
 
@@ -102,12 +116,13 @@ export default class Game extends Phaser.Scene {
         }
 
         this.scoreText = this.scene.scene.add.text(16, 16, `score: ${this.score}`, { fontSize: '32px', fill: '#000' });
+        this.fuelText = this.scene.scene.add.text(16, 50, `fuel: ${this.fuelAmount}`, { fontSize: '32px', fill: '#000' });
 
 
         //Plane overlaps clouds
         this.physics.add.overlap(this.physicsPlane, this.clouds, (el) => {
-            clearTimeout(this.timeout)
-            this.planeOverlaps = true
+            clearTimeout(this.timeout);
+            this.planeOverlaps = true;
             this.timeout = setTimeout(() => {
                 this.planeOverlaps = false
             }, 50)
@@ -126,7 +141,15 @@ export default class Game extends Phaser.Scene {
             repeat: -1
         };
 
+        var fuelAnimConfig = {
+            key: 'fuelAnim',
+            frames: this.anims.generateFrameNumbers('fuelSpritesheet', {start:0, end:2}),
+            frameRate: 6,
+            repeat: -1
+        };
+
         this.anims.create(coinAnimConfig);
+        this.anims.create(fuelAnimConfig);
 
         this.interval2 = setInterval(() => {
             // window.vm.$store.commit('addScore')
@@ -139,10 +162,15 @@ export default class Game extends Phaser.Scene {
         this.respawnCoins();
         this.removeCoinsWhenOffScreen();
         this.handleCloudsOverlapingByPlane();
+        this.respawnFuel();
+        this.fuelAmount--;
+        this.fuelText.setText(`fuel: ${this.fuelAmount}`);
+        if(this.fuelAmount<=0){
+            this.restart()
+        }
 
         if (this.input.activePointer.isDown) {
             let rad = Math.atan2(Math.min(LOW_PLANE_BARRIER,this.input.activePointer.y) - this.physicsPlane.y, Math.abs(this.input.activePointer.x - this.physicsPlane.x));
-            console.log("raaad"+rad);
             if(this.physicsPlane.y<LOW_PLANE_BARRIER){
                 this.physicsPlane.setRotation(rad);
 
@@ -154,10 +182,10 @@ export default class Game extends Phaser.Scene {
         }
 
         this.physicsPlane.y = Math.max(HIGH_PLANE_BARRIER, Math.min(LOW_PLANE_BARRIER, this.physicsPlane.y));
-        this.checkForGameOver()
+        this.checkForGameOver();
 
         this.bgs.getChildren().forEach((el)=>{
-            el.setVelocityX(-this.BASE_CLOUD_SPEED*0.3)
+            el.setVelocityX(-this.BASE_CLOUD_SPEED*0.3);
             if(el.getBounds().x + el.getBounds().width < 0){
                 el.x = el.getBounds().width * 1.5
             }
@@ -183,19 +211,19 @@ export default class Game extends Phaser.Scene {
 
     respawnClouds(){
         if (this.time.now - this.lastTimeSpawnedCloud > this.CLOUD_SPAWN_TIME){
-            this.lastTimeSpawnedCloud = this.time.now
-            let x = window.innerWidth
+            this.lastTimeSpawnedCloud = this.time.now;
+            let x = window.innerWidth;
             let y = Math.max(HIGH_CLOUD_BARRIER, Math.min(LOW_CLOUD_BARRIER, (Math.random()*(window.innerHeight+50))-50));
-            let cl = this.clouds.getFirstDead(false, x, y)
+            let cl = this.clouds.getFirstDead(false, x, y);
             if (cl!==null){
-                cl.x += cl.frame.width / 2
-                cl.active=true
-                cl.setVisible(true)
-                cl.setVelocityX(-((Math.random()*200)+this.BASE_CLOUD_SPEED))
-                cl.baseVelocity = -((Math.random()*200)+this.BASE_CLOUD_SPEED)
-                cl.setScale((Math.random()*1)+0.4)
-                cl.setSize(cl.frame.width/1.3, cl.frame.height/ 1.3)
-                cl.setOffset((cl.frame.width - cl.frame.width/1.3) /2 ,(cl.frame.height - cl.frame.height/ 1.3)/2)
+                cl.x += cl.frame.width / 2;
+                cl.active=true;
+                cl.setVisible(true);
+                cl.setVelocityX(-((Math.random()*200)+this.BASE_CLOUD_SPEED));
+                cl.baseVelocity = -((Math.random()*200)+this.BASE_CLOUD_SPEED);
+                cl.setScale((Math.random()*1)+0.4);
+                cl.setSize(cl.frame.width/1.3, cl.frame.height/ 1.3);
+                cl.setOffset((cl.frame.width - cl.frame.width/1.3) /2 ,(cl.frame.height - cl.frame.height/ 1.3)/2);
             }
         }
     }
@@ -222,6 +250,24 @@ export default class Game extends Phaser.Scene {
                 coin.x +=coin.frame.width / 2;
                 coin.setCircle(coin.frame.width/2,-10,-6);
                 coin.setScale(0.3)
+            }
+        }
+    }
+
+    respawnFuel(){
+        if (this.time.now - this.lastTimeSpawnedFuel > this.FUEL_SPAWN_TIME){
+            this.lastTimeSpawnedFuel = this.time.now;
+            let x = window.innerWidth;
+            let y = Math.min(LOW_CLOUD_BARRIER,Math.random()*window.innerHeight);
+            let fuel = this.physics.add.sprite(x, y, 'fuelSpriteSheet');
+            fuel.anims.play('fuelAnim');
+            if (fuel!==null){
+                this.fuels.add(fuel);
+                fuel.setVelocityX(-(this.BASE_CLOUD_SPEED + 50));
+                fuel.baseVelocity = -((Math.random()*200)+200);
+                fuel.x +=fuel.frame.width / 2;
+                // coin.setCircle(coin.frame.width/2,-10,-6);
+                fuel.setScale(0.3)
             }
         }
     }
