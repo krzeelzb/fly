@@ -8,7 +8,6 @@ export default class Game extends Phaser.Scene {
 
     preload (){
         //load plane image
-        console.log("LOADING")
         this.load.image('plane', '../static/plane-rayanair.png');
         //load coin image
         this.load.image('coin', '../static/coinPlaceholder.png');
@@ -23,6 +22,7 @@ export default class Game extends Phaser.Scene {
 
 
         // if(Math.random()>=0.5){
+        // if(Math.random()>=0.5)
         //     this.load.image('bg', '../static/france.png');
         // }else{
         this.load.image('bg', '../static/italy.png');
@@ -30,7 +30,6 @@ export default class Game extends Phaser.Scene {
 
         this.load.spritesheet('coinSpritesheet','../static/animation/coin.png', {frameWidth:64, frameHeight: 64, endFrame: 64});
 
-        console.log("LOADING DONE")
 
     }
 
@@ -42,8 +41,6 @@ export default class Game extends Phaser.Scene {
         this.interval = setInterval(()=>{
             this.CLOUD_SPAWN_TIME= Math.max(this.CLOUD_SPAWN_TIME-1,200)
             this.BASE_CLOUD_SPEED+=1
-            console.log(this.CLOUD_SPAWN_TIME)
-            console.log(this.BASE_CLOUD_SPEED)
         },100)
 
         this.COLISION_SPEED = 120
@@ -51,9 +48,10 @@ export default class Game extends Phaser.Scene {
 
 
     create (){
-        console.log(this)
+        this.score = 0;
+        console.log(this);
         this.bgs = this.add.group();
-        console.log(window.innerWidth, window.innerHeight);
+        // console.log(window.innerWidth, window.innerHeight);
         this.bg1 = this.physics.add.image(window.innerWidth/2,window.innerHeight/2,'bg')
         this.bg1.setFrame(window.innerWidth,window.innerHeight)
         // this.bg1.setScale(0.53)
@@ -73,10 +71,8 @@ export default class Game extends Phaser.Scene {
         this.physicsPlane = this.physics.add.sprite(400, window.innerHeight / 2, 'plane');
         this.physicsPlane.setScale(0.14)
         this.physicsPlane.setDepth(1)
-        // console.log(this.physicsPlane)
         this.physicsPlane.body.setCircle(220)
         this.physicsPlane.body.setOffset(90,-40)
-        // console.log(this.physicsPlane.body)
 
         this.setup()
 
@@ -94,8 +90,10 @@ export default class Game extends Phaser.Scene {
         this.physics.add.overlap(this.physicsPlane, this.coins, (A,B) =>{
             this.coins.remove(B);
             B.destroy()
+            this.score++
             // window.vm.$store.commit('addCoinInGame')
-            // console.log(this.score);
+            this.scoreText.setText(`score: ${this.score}`);
+            console.log(this.score);
         });
 
 
@@ -109,6 +107,7 @@ export default class Game extends Phaser.Scene {
             this.clouds.killAndHide(cl)
         }
 
+        this.scoreText = this.scene.scene.add.text(16, 16, `score: ${this.score}`, { fontSize: '32px', fill: '#000' });
 
 
         //Plane overlaps clouds
