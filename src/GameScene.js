@@ -103,7 +103,7 @@ export default class Game extends Phaser.Scene {
         for (let i=1;i<=27;i++){
             let y = (i%9)+1
 
-            let cl = this.physics.add.image(3000, Math.max(HIGH_CLOUD_BARRIER, Math.min(LOW_CLOUD_BARRIER, 100*y)),'cloud'+y)
+            let cl = this.physics.add.image(3000, Math.max(LOW_CLOUD_BARRIER, Math.min(LOW_CLOUD_BARRIER, 100*y)),'cloud'+y)
             cl.baseVelocity = -((Math.random()*200)+200)
             this.clouds.add(cl)
             this.clouds.killAndHide(cl)
@@ -144,29 +144,22 @@ export default class Game extends Phaser.Scene {
 
 
     update(time,delta){
-        this.respawnClouds()
-        this.removeCloudsWhenOffScreen()
-
+        this.respawnClouds();
+        this.removeCloudsWhenOffScreen();
         this.respawnCoins();
         this.removeCoinsWhenOffScreen();
-
-        this.handleCloudsOverlapingByPlane()
+        this.handleCloudsOverlapingByPlane();
 
         if (this.input.activePointer.isDown) {
-
-            let rad = Math.atan2(this.input.activePointer.y - this.physicsPlane.y, Math.abs(this.input.activePointer.x - this.physicsPlane.x))
-            this.physicsPlane.setRotation(rad)
-
+            let rad = Math.atan2(this.input.activePointer.y - this.physicsPlane.y, Math.abs(this.input.activePointer.x - this.physicsPlane.x));
+            this.physicsPlane.setRotation(rad);
+            console.log(rad);
             this.physicsPlane.setVelocityY(this.BASE_CLOUD_SPEED* 1.5 * Math.sin(rad))
             //this.manageSpeed(rad)
-
-
         }
 
         this.physicsPlane.y = Math.max(HIGH_PLANE_BARRIER, Math.min(LOW_PLANE_BARRIER, this.physicsPlane.y));
         this.checkForGameOver()
-
-
 
         this.bgs.getChildren().forEach((el)=>{
             el.setVelocityX(-this.BASE_CLOUD_SPEED*0.3)
@@ -210,7 +203,6 @@ export default class Game extends Phaser.Scene {
                 cl.setScale((Math.random()*1)+0.4)
                 cl.setSize(cl.frame.width/1.3, cl.frame.height/ 1.3)
                 cl.setOffset((cl.frame.width - cl.frame.width/1.3) /2 ,(cl.frame.height - cl.frame.height/ 1.3)/2)
-
             }
         }
     }
@@ -225,43 +217,36 @@ export default class Game extends Phaser.Scene {
 
     respawnCoins(){
         if (this.time.now - this.lastTimeSpawnedCoin > this.COIN_SPAWN_TIME){
-            this.lastTimeSpawnedCoin = this.time.now
-            let x = window.innerWidth
-            let y = Math.random()*window.innerHeight
-            let coin = this.physics.add.sprite(x, y, 'coinSpriteSheet')
+            this.lastTimeSpawnedCoin = this.time.now;
+            let x = window.innerWidth;
+            let y = Math.min(LOW_PLANE_BARRIER,Math.random()*window.innerHeight);
+            let coin = this.physics.add.sprite(x, y, 'coinSpriteSheet');
             coin.anims.play('coinAnim');
             if (coin!==null){
-                this.coins.add(coin)
-                coin.setVelocityX(-(this.BASE_CLOUD_SPEED + 50))
-                coin.baseVelocity = -((Math.random()*200)+200)
-                coin.x +=coin.frame.width / 2
-                coin.setCircle(coin.frame.width/2,-10,-6)
+                this.coins.add(coin);
+                coin.setVelocityX(-(this.BASE_CLOUD_SPEED + 50));
+                coin.baseVelocity = -((Math.random()*200)+200);
+                coin.x +=coin.frame.width / 2;
+                coin.setCircle(coin.frame.width/2,-10,-6);
                 coin.setScale(0.3)
-
-
-
             }
-
         }
     }
 
     checkForGameOver(){
         if (this.physicsPlane.x + this.physicsPlane.getBounds().width / 2 < 0){
-            clearInterval(this.interval)
-            clearInterval(this.interval2)
+            clearInterval(this.interval);
+            clearInterval(this.interval2);
             window.vm.$router.push({ name: 'GameOver' })
         }
     }
     removeCoinsWhenOffScreen(){
         this.coins.getChildren().forEach(el => {
             if (el.x + el.frame.width < 0){
-                this.coins.remove(el)
+                this.coins.remove(el);
                 el.destroy()
             }
         })
     }
-
-
-
 }
 
