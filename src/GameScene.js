@@ -170,7 +170,7 @@ export default class Game extends Phaser.Scene {
         }
 
         if (this.input.activePointer.isDown) {
-            let rad = Math.atan2(Math.min(LOW_PLANE_BARRIER,this.input.activePointer.y) - this.physicsPlane.y, Math.abs(this.input.activePointer.x - this.physicsPlane.x));
+            let rad = Math.atan2(Math.min(LOW_PLANE_BARRIER,this.input.activePointer.y) - this.physicsPlane.y, Math.max(this.physicsPlane.x,Math.abs(this.input.activePointer.x - this.physicsPlane.x)));
             if(this.physicsPlane.y<LOW_PLANE_BARRIER){
                 this.physicsPlane.setRotation(rad);
 
