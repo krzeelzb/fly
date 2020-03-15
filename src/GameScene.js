@@ -29,16 +29,16 @@ export default class Game extends Phaser.Scene {
 
 
         this.load.spritesheet('coinSpritesheet','../static/animation/coin.png', {frameWidth:64, frameHeight: 64, endFrame: 64});
+        this.load.spritesheet('seagullSpritesheet','../static/animation/seagull.png', {frameWidth:120, frameHeight: 240});
         this.load.spritesheet('fuelSpritesheet','../static/animation/fuel.png', {frameWidth:101, frameHeight: 117});
-
-
     }
 
     setup(){
-        this.CLOUD_SPAWN_TIME = 900;
-        this.COIN_SPAWN_TIME = 5000;
+        this.CLOUD_SPAWN_TIME = 900
+        this.COIN_SPAWN_TIME = 5000
+        this.SEAGULL_SPAWN_TIME = 2200
+        this.BASE_CLOUD_SPEED = 200
         this.FUEL_SPAWN_TIME = 8000;
-        this.BASE_CLOUD_SPEED = 200;
 
         this.interval = setInterval(()=>{
             this.CLOUD_SPAWN_TIME= Math.max(this.CLOUD_SPAWN_TIME-1,200);
@@ -51,8 +51,9 @@ export default class Game extends Phaser.Scene {
 
     create (){
         this.score = 0;
-        this.fuelAmount =5000;
-        console.log(this);
+        this.lives = 4;
+        this.fuelAmount = 5000;
+
         this.bgs = this.add.group();
         // console.log(window.innerWidth, window.innerHeight);
         this.bg1 = this.physics.add.image(window.innerWidth/2,window.innerHeight/2,'bg');
@@ -78,10 +79,14 @@ export default class Game extends Phaser.Scene {
         //setup variables useful for clouds and coins
         this.lastTimeSpawnedCloud = 0;
         this.lastTimeSpawnedCoin = 0;
+        this.lastTimeSpawnedSeagull = 0;
         this.lastTimeSpawnedFuel = 0;
+
         this.clouds = this.add.group();
         this.clouds.setDepth(3);
         this.coins = this.add.group();
+        this.seagulls = this.add.group();
+        this.seagulls.setDepth(2);
         this.coins.setDepth(2);
         this.fuels=this.add.group();
         this.fuels.setDepth(2);
@@ -91,17 +96,21 @@ export default class Game extends Phaser.Scene {
             this.coins.remove(B);
             B.destroy();
             this.score++;
-            // window.vm.$store.commit('addCoinInGame')
             this.scoreText.setText(`score: ${this.score}`);
-            console.log(this.score);
         });
+
       this.physics.add.overlap(this.physicsPlane, this.fuels, (A,B) =>{
             this.fuels.remove(B);
             B.destroy();
             this.fuelAmount+=1000;
-            // window.vm.$store.commit('addCoinInGame')
             this.fuelText.setText(`fuel: ${this.fuelAmount}`);
-            // console.log(this.score);
+        });
+
+        this.physics.add.overlap(this.physicsPlane, this.seagulls, (A,B) =>{
+            this.seagulls.remove(B);
+            B.destroy()
+            this.lives--
+            this.livesText.setText(`lives: ${this.lives}`);
         });
 
 
@@ -117,6 +126,7 @@ export default class Game extends Phaser.Scene {
 
         this.scoreText = this.scene.scene.add.text(16, 16, `score: ${this.score}`, { fontSize: '32px', fill: '#000' });
         this.fuelText = this.scene.scene.add.text(16, 50, `fuel: ${this.fuelAmount}`, { fontSize: '32px', fill: '#000' });
+        this.livesText = this.scene.scene.add.text(16, 84, `lives: ${this.lives}`, { fontSize: '32px', fill: '#000' });
 
 
         //Plane overlaps clouds
@@ -141,6 +151,12 @@ export default class Game extends Phaser.Scene {
             repeat: -1
         };
 
+        var seagullAnimConfig = {
+            key: 'seagullAnim',
+            frames: this.anims.generateFrameNumbers('seagullSpritesheet', {start:0, end:4}),
+            frameRate: 6,
+            repeat: -1
+        };
         var fuelAnimConfig = {
             key: 'fuelAnim',
             frames: this.anims.generateFrameNumbers('fuelSpritesheet', {start:0, end:2}),
@@ -149,6 +165,7 @@ export default class Game extends Phaser.Scene {
         };
 
         this.anims.create(coinAnimConfig);
+        this.anims.create(seagullAnimConfig);
         this.anims.create(fuelAnimConfig);
 
         this.interval2 = setInterval(() => {
@@ -161,13 +178,13 @@ export default class Game extends Phaser.Scene {
         this.removeCloudsWhenOffScreen();
         this.respawnCoins();
         this.removeCoinsWhenOffScreen();
+        this.respawnSeagulls()
+        this.removeSeagullsWhenOffScreen()
         this.handleCloudsOverlapingByPlane();
         this.respawnFuel();
         this.fuelAmount--;
         this.fuelText.setText(`fuel: ${this.fuelAmount}`);
-        if(this.fuelAmount<=0){
-            this.restart()
-        }
+
 
         if (this.input.activePointer.isDown) {
             let rad = Math.atan2(Math.min(LOW_PLANE_BARRIER,this.input.activePointer.y) - this.physicsPlane.y, Math.max(this.physicsPlane.x,Math.abs(this.input.activePointer.x - this.physicsPlane.x)));
@@ -254,18 +271,50 @@ export default class Game extends Phaser.Scene {
         }
     }
 
-    respawnFuel(){
-        if (this.time.now - this.lastTimeSpawnedFuel > this.FUEL_SPAWN_TIME){
+    respawnSeagulls(){
+        if (this.time.now - this.lastTimeSpawnedSeagull > this.SEAGULL_SPAWN_TIME){
+            this.lastTimeSpawnedSeagull = this.time.now;
+            this.SEAGULL_SPAWN_TIME -= 50
+            this.SEAGULL_SPAWN_TIME = this.SEAGULL_SPAWN_TIME < 500 ? 500 : this.SEAGULL_SPAWN_TIME
+            let x = window.innerWidth;
+            let y = Math.min(LOW_PLANE_BARRIER,Math.random()*window.innerHeight);
+            this.spawnSingleSeagull(x,y)
+            if (this.SEAGULL_SPAWN_TIME < 1000){
+                y = Math.min(LOW_PLANE_BARRIER,Math.random()*window.innerHeight);
+                this.spawnSingleSeagull(x + Math.random() * 200 -100 ,y)
+            }
+            if (this.SEAGULL_SPAWN_TIME < 2000){
+                y = Math.min(LOW_PLANE_BARRIER,Math.random()*window.innerHeight);
+                this.spawnSingleSeagull(x + Math.random() * 200 -100,y)
+            }
+        }
+    }
+
+    spawnSingleSeagull(x,y) {
+        let seagull = this.physics.add.sprite(x, y, 'seagullSpriteSheet');
+        seagull.anims.play('seagullAnim');
+        if (seagull !== null) {
+            this.seagulls.add(seagull);
+            seagull.setVelocityX(-(this.BASE_CLOUD_SPEED + 50));
+            seagull.baseVelocity = -((Math.random() * 200) + 200);
+            seagull.x += seagull.frame.width / 2;
+            seagull.setCircle(seagull.frame.width / 2, -10, -6);
+            seagull.setScale(0.3)
+        }
+    }
+
+    respawnFuel() {
+        if (this.time.now - this.lastTimeSpawnedFuel > this.FUEL_SPAWN_TIME) {
             this.lastTimeSpawnedFuel = this.time.now;
             let x = window.innerWidth;
-            let y = Math.min(LOW_CLOUD_BARRIER,Math.random()*window.innerHeight);
+            let y = Math.min(LOW_CLOUD_BARRIER, Math.random() * window.innerHeight);
             let fuel = this.physics.add.sprite(x, y, 'fuelSpriteSheet');
             fuel.anims.play('fuelAnim');
-            if (fuel!==null){
+            if (fuel !== null) {
                 this.fuels.add(fuel);
                 fuel.setVelocityX(-(this.BASE_CLOUD_SPEED + 50));
-                fuel.baseVelocity = -((Math.random()*200)+200);
-                fuel.x +=fuel.frame.width / 2;
+                fuel.baseVelocity = -((Math.random() * 200) + 200);
+                fuel.x += fuel.frame.width / 2;
                 // coin.setCircle(coin.frame.width/2,-10,-6);
                 fuel.setScale(0.3)
             }
@@ -273,7 +322,7 @@ export default class Game extends Phaser.Scene {
     }
 
     checkForGameOver(){
-        if (this.physicsPlane.x + this.physicsPlane.getBounds().width / 2 < 0){
+        if (this.physicsPlane.x + this.physicsPlane.getBounds().width / 2 < 0 || this.lives <= 0 || this.fuelAmount <= 0){
             clearInterval(this.interval);
             clearInterval(this.interval2);
             this.restart();
@@ -283,7 +332,17 @@ export default class Game extends Phaser.Scene {
 
     restart(){
         this.score = 0;
+        this.lives = 4;
         this.scene.restart();
+    }
+
+    removeSeagullsWhenOffScreen(){
+        this.seagulls.getChildren().forEach(el => {
+            if (el.x + el.frame.width < 0){
+                this.seagulls.remove(el);
+                el.destroy()
+            }
+        })
     }
 
     removeCoinsWhenOffScreen(){
