@@ -133,9 +133,6 @@ export default class Game extends Phaser.Scene {
         }, 500)
     }
 
-
-
-
     update(time,delta){
         this.respawnClouds();
         this.removeCloudsWhenOffScreen();
@@ -233,9 +230,16 @@ export default class Game extends Phaser.Scene {
         if (this.physicsPlane.x + this.physicsPlane.getBounds().width / 2 < 0){
             clearInterval(this.interval);
             clearInterval(this.interval2);
-            window.vm.$router.push({ name: 'GameOver' })
+            this.restart();
+            // window.vm.$router.push({ name: 'GameOver' })
         }
     }
+
+    restart(){
+        this.score = 0;
+        this.scene.restart();
+    }
+
     removeCoinsWhenOffScreen(){
         this.coins.getChildren().forEach(el => {
             if (el.x + el.frame.width < 0){
