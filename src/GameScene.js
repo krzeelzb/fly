@@ -25,6 +25,10 @@ export default class Game extends Phaser.Scene {
         //     this.load.image('bg', '../static/france.png');
         // }else{
         this.load.image('bg', '../static/italy.png');
+        this.load.image('plane1', '../static/plane1.png');
+        this.load.image('plane2', '../static/plane2.png');
+        this.load.image('plane3', '../static/plane3.png');
+        this.load.image('plane4', '../static/plane4.png');
         // }
 
 
@@ -110,7 +114,6 @@ export default class Game extends Phaser.Scene {
             this.seagulls.remove(B);
             B.destroy()
             this.lives--
-            this.livesText.setText(`lives: ${this.lives}`);
         });
 
 
@@ -126,8 +129,9 @@ export default class Game extends Phaser.Scene {
 
         this.scoreText = this.scene.scene.add.text(16, 16, `score: ${this.score}`, { fontSize: '32px', fill: '#000' });
         this.fuelText = this.scene.scene.add.text(16, 50, `fuel: ${this.fuelAmount}`, { fontSize: '32px', fill: '#000' });
-        this.livesText = this.scene.scene.add.text(16, 84, `lives: ${this.lives}`, { fontSize: '32px', fill: '#000' });
 
+        this.liveImg = this.physics.add.image(60, 120, 'plane4');
+        this.liveImg.setScale(0.15)
 
         //Plane overlaps clouds
         this.physics.add.overlap(this.physicsPlane, this.clouds, (el) => {
@@ -137,8 +141,6 @@ export default class Game extends Phaser.Scene {
                 this.planeOverlaps = false
             }, 50)
         });
-
-
 
 
         //animation
@@ -184,7 +186,7 @@ export default class Game extends Phaser.Scene {
         this.respawnFuel();
         this.fuelAmount--;
         this.fuelText.setText(`fuel: ${this.fuelAmount}`);
-
+        this.liveImg.setTexture(`plane${this.lives}`);
 
         if (this.input.activePointer.isDown) {
             let rad = Math.atan2(Math.min(LOW_PLANE_BARRIER,this.input.activePointer.y) - this.physicsPlane.y, Math.abs(this.input.activePointer.x - this.physicsPlane.x));
