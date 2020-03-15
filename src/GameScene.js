@@ -32,9 +32,9 @@ export default class Game extends Phaser.Scene {
         this.score = 0;
         this.lives = 4;
         this.fuelAmount = 5000;
-        this.birdSound=this.sound.add('birdSound');
+        this.birdSound=this.sound.add('birdSound',{ volume: 0.2  });
         this.fuelSound=this.sound.add('fuelSound');
-        this.coinSound=this.sound.add('coinSound');
+        this.coinSound=this.sound.add('coinSound',{ volume: 0.2  });
         this.planeSound=this.sound.add('planeSound');
         this.planeSound.play();
 
