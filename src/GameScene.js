@@ -5,37 +5,10 @@ const HIGH_CLOUD_BARRIER = 100;
 const HIGH_PLANE_BARRIER = 10;
 const LOW_PLANE_BARRIER = 700;
 export default class Game extends Phaser.Scene {
-
-    preload (){
-        //load plane image
-        this.load.image('plane', '../static/plane-rayanair.png');
-        //load coin image
-        this.load.image('coin', '../static/coinPlaceholder.png');
-        //load cloud images
-        for (let i=1;i<=9;i++){
-            this.load.image('cloud'+i, '../static/clouds/cloud'+i+'.png');
-
-        }
-
-        //animation
-
-
-        // if(Math.random()>=0.5){
-        // if(Math.random()>=0.5)
-        //     this.load.image('bg', '../static/france.png');
-        // }else{
-        this.load.image('bg', '../static/italy.png');
-        this.load.image('plane1', '../static/plane1.png');
-        this.load.image('plane2', '../static/plane2.png');
-        this.load.image('plane3', '../static/plane3.png');
-        this.load.image('plane4', '../static/plane4.png');
-        // }
-
-
-        this.load.spritesheet('coinSpritesheet','../static/animation/coin.png', {frameWidth:64, frameHeight: 64, endFrame: 64});
-        this.load.spritesheet('seagullSpritesheet','../static/animation/seagull.png', {frameWidth:120, frameHeight: 240});
-        this.load.spritesheet('fuelSpritesheet','../static/animation/fuel.png', {frameWidth:101, frameHeight: 117});
+    constructor() {
+        super("Game");
     }
+
 
     setup(){
         this.CLOUD_SPAWN_TIME = 900
@@ -333,9 +306,9 @@ export default class Game extends Phaser.Scene {
     }
 
     restart(){
+        this.scene.start("Start", {score: this.score});
         this.score = 0;
         this.lives = 4;
-        this.scene.restart();
     }
 
     removeSeagullsWhenOffScreen(){
