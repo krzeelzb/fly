@@ -2,8 +2,8 @@ import Phaser from 'phaser'
 
 const LOW_CLOUD_BARRIER = 680;
 const HIGH_CLOUD_BARRIER = 100;
-const HIGH_PLANE_BARRIER = 5
-const LOW_PLANE_BARRIER = 700
+const HIGH_PLANE_BARRIER = 10;
+const LOW_PLANE_BARRIER = 700;
 export default class Game extends Phaser.Scene {
 
     preload (){
@@ -51,36 +51,31 @@ export default class Game extends Phaser.Scene {
         console.log(this);
         this.bgs = this.add.group();
         // console.log(window.innerWidth, window.innerHeight);
-        this.bg1 = this.physics.add.image(window.innerWidth/2,window.innerHeight/2,'bg')
-        this.bg1.setFrame(window.innerWidth,window.innerHeight)
+        this.bg1 = this.physics.add.image(window.innerWidth/2,window.innerHeight/2,'bg');
+        this.bg1.setFrame(window.innerWidth,window.innerHeight);
         // this.bg1.setScale(0.53)
 
-        this.bg2 = this.physics.add.image(window.innerWidth/2 + this.bg1.getBounds().width,window.innerHeight/2,'bg')
-        this.bg2.setFrame(window.innerWidth,window.innerHeight)
+        this.bg2 = this.physics.add.image(window.innerWidth/2 + this.bg1.getBounds().width,window.innerHeight/2,'bg');
+        this.bg2.setFrame(window.innerWidth,window.innerHeight);
         // this.bg2.setScale(0.53)
+        this.bgs.add(this.bg1);
+        this.bgs.add(this.bg2);
 
-        this.bgs.add(this.bg1)
-        this.bgs.add(this.bg2)
 
-
-        this.bg1.setDepth(0)
+        this.bg1.setDepth(0);
         //plane
-
-
         this.physicsPlane = this.physics.add.sprite(400, window.innerHeight / 2, 'plane');
-        this.physicsPlane.setScale(0.14)
-        this.physicsPlane.setDepth(1)
-        this.physicsPlane.body.setCircle(220)
-        this.physicsPlane.body.setOffset(90,-40)
-
-        this.setup()
+        this.physicsPlane.setScale(0.14);
+        this.physicsPlane.setDepth(1);
+        this.physicsPlane.body.setCircle(220);
+        this.physicsPlane.body.setOffset(90,-40);
+        this.setup();
 
         //setup variables useful for clouds and coins
-
         this.lastTimeSpawnedCloud = 0;
         this.lastTimeSpawnedCoin = 0;
         this.clouds = this.add.group();
-        this.clouds.setDepth(3)
+        this.clouds.setDepth(3);
         this.coins = this.add.group();
         this.coins.setDepth(2);
 
@@ -88,8 +83,8 @@ export default class Game extends Phaser.Scene {
 
         this.physics.add.overlap(this.physicsPlane, this.coins, (A,B) =>{
             this.coins.remove(B);
-            B.destroy()
-            this.score++
+            B.destroy();
+            this.score++;
             // window.vm.$store.commit('addCoinInGame')
             this.scoreText.setText(`score: ${this.score}`);
             console.log(this.score);
@@ -98,11 +93,11 @@ export default class Game extends Phaser.Scene {
 
         //cloud setup
         for (let i=1;i<=27;i++){
-            let y = (i%9)+1
+            let y = (i%9)+1;
 
             let cl = this.physics.add.image(3000, Math.max(LOW_CLOUD_BARRIER, Math.min(LOW_CLOUD_BARRIER, 100*y)),'cloud'+y)
-            cl.baseVelocity = -((Math.random()*200)+200)
-            this.clouds.add(cl)
+            cl.baseVelocity = -((Math.random()*200)+200);
+            this.clouds.add(cl);
             this.clouds.killAndHide(cl)
         }
 
@@ -149,11 +144,13 @@ export default class Game extends Phaser.Scene {
         this.handleCloudsOverlapingByPlane();
 
         if (this.input.activePointer.isDown) {
-            let rad = Math.atan2(this.input.activePointer.y - this.physicsPlane.y, Math.abs(this.input.activePointer.x - this.physicsPlane.x));
-            // console.log("raaad"+rad);
-            if(this.physicsPlane.y>LOW_PLANE_BARRIER){
+            let rad = Math.atan2(Math.min(LOW_PLANE_BARRIER,this.input.activePointer.y) - this.physicsPlane.y, Math.abs(this.input.activePointer.x - this.physicsPlane.x));
+            console.log("raaad"+rad);
+            if(this.physicsPlane.y<LOW_PLANE_BARRIER){
                 this.physicsPlane.setRotation(rad);
 
+            }else {
+                this.physicsPlane.setRotation(0);
             }
             this.physicsPlane.setVelocityY(this.BASE_CLOUD_SPEED* 1.5 * Math.sin(rad))
             //this.manageSpeed(rad)
