@@ -12,7 +12,6 @@ export default class Game extends Phaser.Scene {
         this.load.image('plane', '../static/plane-rayanair.png');
         //load coin image
         this.load.image('coin', '../static/coinPlaceholder.png');
-
         //load cloud images
         for (let i=1;i<=9;i++){
             this.load.image('cloud'+i, '../static/clouds/cloud'+i+'.png');
@@ -152,8 +151,11 @@ export default class Game extends Phaser.Scene {
 
         if (this.input.activePointer.isDown) {
             let rad = Math.atan2(this.input.activePointer.y - this.physicsPlane.y, Math.abs(this.input.activePointer.x - this.physicsPlane.x));
-            this.physicsPlane.setRotation(rad);
-            console.log(rad);
+            // console.log("raaad"+rad);
+            if(this.physicsPlane.y>LOW_PLANE_BARRIER){
+                this.physicsPlane.setRotation(rad);
+
+            }
             this.physicsPlane.setVelocityY(this.BASE_CLOUD_SPEED* 1.5 * Math.sin(rad))
             //this.manageSpeed(rad)
         }
@@ -175,7 +177,6 @@ export default class Game extends Phaser.Scene {
     }
 
     handleCloudsOverlapingByPlane(){
-
         if (this.planeOverlaps){
             this.physicsPlane.setVelocityX(-this.COLISION_SPEED)
         }else{
@@ -185,7 +186,6 @@ export default class Game extends Phaser.Scene {
                 this.physicsPlane.setVelocityX(10)
             }
         }
-
     }
 
     respawnClouds(){
