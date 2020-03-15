@@ -29,6 +29,7 @@ export default class Game extends Phaser.Scene {
         // }
 
         this.load.spritesheet('coinSpritesheet','../static/animation/coin.png', {frameWidth:64, frameHeight: 64, endFrame: 64});
+        this.load.spritesheet('seagullSpritesheet','../static/animation/seagull.png', {frameWidth:120, frameHeight: 240});
 
 
     }
@@ -36,6 +37,7 @@ export default class Game extends Phaser.Scene {
     setup(){
         this.CLOUD_SPAWN_TIME = 900
         this.COIN_SPAWN_TIME = 5000
+        this.SEAGULL_SPAWN_TIME = 2200
         this.BASE_CLOUD_SPEED = 200
 
         this.interval = setInterval(()=>{
@@ -49,6 +51,7 @@ export default class Game extends Phaser.Scene {
 
     create (){
         this.score = 0;
+        this.lives = 4;
         console.log(this);
         this.bgs = this.add.group();
         // console.log(window.innerWidth, window.innerHeight);
@@ -80,9 +83,12 @@ export default class Game extends Phaser.Scene {
 
         this.lastTimeSpawnedCloud = 0;
         this.lastTimeSpawnedCoin = 0;
+        this.lastTimeSpawnedSeagull = 0;
         this.clouds = this.add.group();
         this.clouds.setDepth(3)
         this.coins = this.add.group();
+        this.seagulls = this.add.group();
+        this.seagulls.setDepth(2);
         this.coins.setDepth(2);
 
         //coin overlapping
@@ -96,6 +102,17 @@ export default class Game extends Phaser.Scene {
             console.log(this.score);
         });
 
+        this.physics.add.overlap(this.physicsPlane, this.seagulls, (A,B) =>{
+            this.seagulls.remove(B);
+            B.destroy()
+            this.lives--
+            // window.vm.$store.commit('addCoinInGame')
+            this.livesText.setText(`lives: ${this.lives}`);
+        });
+
+
+
+
 
         //cloud setup
         for (let i=1;i<=27;i++){
@@ -108,6 +125,7 @@ export default class Game extends Phaser.Scene {
         }
 
         this.scoreText = this.scene.scene.add.text(16, 16, `score: ${this.score}`, { fontSize: '32px', fill: '#000' });
+        this.livesText = this.scene.scene.add.text(16, 84, `lives: ${this.lives}`, { fontSize: '32px', fill: '#000' });
 
 
         //Plane overlaps clouds
@@ -132,7 +150,17 @@ export default class Game extends Phaser.Scene {
             repeat: -1
         };
 
+        var seagullAnimConfig = {
+            key: 'seagullAnim',
+            frames: this.anims.generateFrameNumbers('seagullSpritesheet', {start:0, end:4}),
+            frameRate: 6,
+            repeat: -1
+        };
+
         this.anims.create(coinAnimConfig);
+        this.anims.create(seagullAnimConfig);
+
+
 
         this.interval2 = setInterval(() => {
             // window.vm.$store.commit('addScore')
@@ -144,6 +172,8 @@ export default class Game extends Phaser.Scene {
         this.removeCloudsWhenOffScreen();
         this.respawnCoins();
         this.removeCoinsWhenOffScreen();
+        this.respawnSeagulls()
+        this.removeSeagullsWhenOffScreen()
         this.handleCloudsOverlapingByPlane();
 
         if (this.input.activePointer.isDown) {
@@ -229,8 +259,40 @@ export default class Game extends Phaser.Scene {
         }
     }
 
+    respawnSeagulls(){
+        if (this.time.now - this.lastTimeSpawnedSeagull > this.SEAGULL_SPAWN_TIME){
+            this.lastTimeSpawnedSeagull = this.time.now;
+            this.SEAGULL_SPAWN_TIME -= 50
+            this.SEAGULL_SPAWN_TIME = this.SEAGULL_SPAWN_TIME < 500 ? 500 : this.SEAGULL_SPAWN_TIME
+            let x = window.innerWidth;
+            let y = Math.min(LOW_PLANE_BARRIER,Math.random()*window.innerHeight);
+            this.spawnSingleSeagull(x,y)
+            if (this.SEAGULL_SPAWN_TIME < 1000){
+                y = Math.min(LOW_PLANE_BARRIER,Math.random()*window.innerHeight);
+                this.spawnSingleSeagull(x + Math.random() * 200 -100 ,y)
+            }
+            if (this.SEAGULL_SPAWN_TIME < 2000){
+                y = Math.min(LOW_PLANE_BARRIER,Math.random()*window.innerHeight);
+                this.spawnSingleSeagull(x + Math.random() * 200 -100,y)
+            }
+        }
+    }
+
+    spawnSingleSeagull(x,y){
+        let seagull = this.physics.add.sprite(x, y, 'seagullSpriteSheet');
+        seagull.anims.play('seagullAnim');
+        if (seagull!==null){
+            this.seagulls.add(seagull);
+            seagull.setVelocityX(-(this.BASE_CLOUD_SPEED + 50));
+            seagull.baseVelocity = -((Math.random()*200)+200);
+            seagull.x +=seagull.frame.width / 2;
+            seagull.setCircle(seagull.frame.width/2,-10,-6);
+            seagull.setScale(0.3)
+        }
+    }
+
     checkForGameOver(){
-        if (this.physicsPlane.x + this.physicsPlane.getBounds().width / 2 < 0){
+        if (this.physicsPlane.x + this.physicsPlane.getBounds().width / 2 < 0 || this.lives <= 0){
             clearInterval(this.interval);
             clearInterval(this.interval2);
             this.restart();
@@ -240,7 +302,17 @@ export default class Game extends Phaser.Scene {
 
     restart(){
         this.score = 0;
+        this.lives = 4;
         this.scene.restart();
+    }
+
+    removeSeagullsWhenOffScreen(){
+        this.seagulls.getChildren().forEach(el => {
+            if (el.x + el.frame.width < 0){
+                this.seagulls.remove(el);
+                el.destroy()
+            }
+        })
     }
 
     removeCoinsWhenOffScreen(){
