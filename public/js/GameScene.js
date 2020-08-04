@@ -1,4 +1,4 @@
-// import Phaser from "phaser";
+import Phaser from "phaser";
 
 const LOW_CLOUD_BARRIER = 680;
 const HIGH_CLOUD_BARRIER = 100;

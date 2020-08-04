@@ -1,4 +1,4 @@
-// import Phaser from "phaser";
+import Phaser from "phaser";
 import GameScene from "./GameScene.js";
 import StartScene from "./StartScene.js";
 
